@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Katalog Buku - GramediaBook Monitor</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">📚</div>
+        <div>
+            <h2>GramediaBook</h2>
+            <span>Monitor</span>
+        </div>
+    </div>
+
+    <nav>
+        <a href="{{ url_for('dashboard') }}" class="nav-link">
+            🏠 Dashboard
+        </a>
+
+        <a href="{{ url_for('catalog') }}" class="nav-link active">
+            📖 Katalog Buku
+        </a>
+
+        <a href="{{ url_for('dashboard') }}#history" class="nav-link">
+            📊 Riwayat Scraping
+        </a>
+        <a href="{{ url_for('price_analysis') }}" class="nav-link"> 
+            📈 Analisis Harga
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <span>Made with 💗</span>
+        <small>GramediaBook Monitor</small>
+    </div>
+</div>
+
+<main class="main-content">
+
+    <header class="topbar">
+        <div>
+            <h1>Katalog Buku 📚</h1>
+            <p>Jelajahi dan temukan koleksi buku Gramedia.</p>
+        </div>
+
+        <div class="profile">
+            <span>🎀</span>
+            <div>
+                <strong>Book Monitor</strong>
+                <small>Administrator</small>
+            </div>
+        </div>
+    </header>
+
+    <section class="catalog-heading">
+        <div>
+            <h2>Semua Koleksi Buku</h2>
+            <p>
+                Tersedia {{ total_books }} buku dalam database.
+            </p>
+        </div>
+    </section>
+
+    <section class="catalog-search">
+        <form action="{{ url_for('catalog') }}" method="GET">
+            <input
+                type="text"
+                name="q"
+                placeholder="Cari judul, penulis, atau ISBN..."
+                value="{{ search_query }}"
+            >
+
+            <button type="submit">🔍 Cari Buku</button>
+
+            {% if search_query %}
+                <a href="{{ url_for('catalog') }}" class="reset-search">
+                    Reset
+                </a>
+            {% endif %}
+        </form>
+    </section>
+
+    <section class="catalog-result">
+        <p>
+            {% if search_query %}
+                Hasil pencarian untuk
+                <strong>"{{ search_query }}"</strong>:
+                {{ books|length }} buku
+            {% else %}
+                Menampilkan {{ books|length }} buku
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="book-grid">
+
+        {% for book in books %}
+
+        <article class="catalog-card">
+
+            <div class="book-cover">
+                {% if book['image'] %}
+                    <img
+                        src="{{ book['image'] }}"
+                        alt="{{ book['title'] }}"
+                        loading="lazy"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div class="cover-placeholder" style="display:none;">
+                        📚
+                    </div>
+                {% else %}
+                    <div class="cover-placeholder">
+                        📚
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="book-info">
+
+                <span class="book-category">
+                    {{ book['categories'] or 'Tanpa kategori' }}
+                </span>
+
+                <h3>{{ book['title'] }}</h3>
+
+                <p class="book-author">
+                    {{ book['author'] or 'Penulis tidak diketahui' }}
+                </p>
+
+                <div class="book-details">
+                    <span>ISBN</span>
+                    <span>{{ book['isbn'] or '-' }}</span>
+                </div>
+
+                <div class="book-price">
+                    {% if book['price'] is not none %}
+                        Rp{{ "{:,.0f}".format(book['price']).replace(",", ".") }}
+                    {% else %}
+                        Harga tidak tersedia
+                    {% endif %}
+                </div>
+
+                {% if book['url'] %}
+                    <div class="catalog-actions">
+
+    <a
+        href="{{ url_for('book_detail', book_id=book['id']) }}"
+        class="detail-button"
+    >
+        Detail Buku
+    </a>
+
+    {% if book['url'] %}
+    <a
+        href="{{ book['url'] }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="source-link"
+    >
+        Gramedia ↗
+    </a>
+    {% endif %}
+
+</div>
+                {% endif %}
+
+            </div>
+        </article>
+
+        {% else %}
+
+        <div class="empty-catalog">
+            <span>🔎</span>
+            <h3>Buku tidak ditemukan</h3>
+            <p>Coba gunakan kata kunci pencarian yang lain.</p>
+        </div>
+
+        {% endfor %}
+
+    </section>
+
+    <footer>
+        GramediaBook Monitor © 2026 · Made with 💗
+    </footer>
+
+</main>
+
+</body>
+</html>

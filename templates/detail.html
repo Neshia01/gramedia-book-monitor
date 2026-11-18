@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ book['title'] }} - GramediaBook Monitor</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">📚</div>
+        <div>
+            <h2>GramediaBook</h2>
+            <span>Monitor</span>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/" class="nav-link">🏠 Dashboard</a>
+        <a href="{{ url_for('catalog') }}" class="nav-link active">📖 Katalog Buku</a>
+        <a href="/#history" class="nav-link">📊 Riwayat Scraping</a>
+        <a href="{{ url_for('price_analysis') }}" class="nav-link"> 📈 Analisis Harga</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <span>Made with 💗</span>
+        <small>GramediaBook Monitor</small>
+    </div>
+</div>
+
+<main class="main-content">
+
+    <!-- HEADER -->
+    <header class="topbar">
+        <div>
+            <h1>Detail Buku 📖</h1>
+            <p>Informasi lengkap dan pemantauan harga buku.</p>
+        </div>
+
+        <div class="profile">
+            <span>🎀</span>
+            <div>
+                <strong>Book Monitor</strong>
+                <small>Administrator</small>
+            </div>
+        </div>
+    </header>
+
+    <a href="{{ url_for('catalog') }}" class="back-button">
+        ← Kembali ke Katalog
+    </a>
+
+    <!-- INFORMASI BUKU -->
+    <section class="detail-book-card">
+
+        <div class="detail-cover">
+            {% if book['image'] %}
+                <img src="{{ book['image'] }}"
+                     alt="{{ book['title'] }}">
+            {% else %}
+                <div class="detail-no-cover">📚</div>
+            {% endif %}
+        </div>
+
+        <div class="detail-information">
+
+            <span class="detail-label">BOOK INFORMATION ✨</span>
+
+            <h2>{{ book['title'] }}</h2>
+
+            <p class="detail-author">
+                {{ book['author'] or 'Penulis tidak diketahui' }}
+            </p>
+
+            <div class="detail-current-price">
+                <span>Harga Saat Ini</span>
+                <strong>
+                    {% if book['price'] is not none %}
+                        Rp{{ "{:,.0f}".format(book['price']).replace(",", ".") }}
+                    {% else %}
+                        Tidak tersedia
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-metadata">
+
+                <div>
+                    <span>ISBN</span>
+                    <strong>{{ book['isbn'] or '-' }}</strong>
+                </div>
+
+                <div>
+                    <span>Jumlah Halaman</span>
+                    <strong>{{ book['pages'] or '-' }}</strong>
+                </div>
+
+                <div>
+                    <span>Ukuran Buku</span>
+                    <strong>{{ book['size'] or '-' }}</strong>
+                </div>
+
+                <div>
+                    <span>Jenis Rate</span>
+                    <strong>{{ book['age_rating'] or '-' }}</strong>
+                </div>
+
+                <div>
+                    <span>Tanggal Terbit</span>
+                    <strong>{{ book['published_date'] or '-' }}</strong>
+                </div>
+
+                <div>
+                    <span>Kategori</span>
+                    <strong>{{ book['categories'] or '-' }}</strong>
+                </div>
+
+            </div>
+
+            {% if book['url'] %}
+            <a href="{{ book['url'] }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="detail-button source-button">
+                Lihat Buku di M&C! Gramedia ↗
+            </a>
+            {% endif %}
+
+        </div>
+    </section>
+
+    <!-- GRAFIK RIWAYAT HARGA -->
+    <section class="price-chart-panel">
+
+        <div class="price-panel-heading">
+            <div>
+                <h3>📈 Riwayat Perubahan Harga</h3>
+                <p>Pantau perkembangan harga buku dari waktu ke waktu.</p>
+            </div>
+        </div>
+
+        {% if price_history %}
+
+        <div class="chart-container">
+            <canvas
+                id="priceChart"
+                data-labels='{{ price_history | map(attribute="recorded_at") | list | tojson }}'
+                data-values='{{ price_history | map(attribute="price") | list | tojson }}'>
+            </canvas>
+        </div>
+
+        {% else %}
+
+        <div class="no-history">
+            <span>📊</span>
+            <h3>Belum Ada Riwayat Harga</h3>
+            <p>Riwayat harga akan muncul setelah data scraping tersimpan.</p>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- TABEL RIWAYAT HARGA -->
+    <section class="price-history-panel">
+
+        <div class="price-panel-heading">
+            <div>
+                <h3>🕒 Catatan Harga</h3>
+                <p>Daftar harga yang pernah tercatat di database.</p>
+            </div>
+        </div>
+
+        {% if price_history %}
+
+        <div class="history-table-wrapper">
+            <table class="price-history-table">
+
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Waktu Pencatatan</th>
+                        <th>Harga</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for history in price_history|reverse %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+
+                        <td>
+                            {{ history['recorded_at'] }}
+                        </td>
+
+                        <td class="history-price">
+                            Rp{{ "{:,.0f}".format(history['price']).replace(",", ".") }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        {% else %}
+
+        <p class="empty-history">
+            Belum ada catatan harga untuk buku ini.
+        </p>
+
+        {% endif %}
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        GramediaBook Monitor © 2026 · Made with 💗
+    </footer>
+
+</main>
+
+<!-- JAVASCRIPT GRAFIK: HANYA SATU KALI -->
+{% if price_history %}
+<script>
+    const chartCanvas = document.getElementById('priceChart');
+
+    const priceLabels = JSON.parse(chartCanvas.dataset.labels);
+    const priceValues = JSON.parse(chartCanvas.dataset.values);
+
+    const chartContext = chartCanvas.getContext('2d');
+
+    new Chart(chartContext, {
+        type: 'line',
+
+        data: {
+            labels: priceLabels,
+
+            datasets: [{
+                label: 'Harga Buku',
+                data: priceValues,
+                borderColor: '#e879a5',
+                backgroundColor: 'rgba(232, 121, 165, 0.15)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#e879a5'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Rp' + new Intl.NumberFormat('id-ID')
+                                .format(context.raw);
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: false,
+
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp' + new Intl.NumberFormat('id-ID')
+                                .format(value);
+                        }
+                    }
+                },
+
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+<a href="{{ url_for('price_analysis') }}" class="nav-link"> 📈 Analisis Harga</a>
+</body>
+</html>

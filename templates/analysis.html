@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Analisis Harga - GramediaBook Monitor</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">📚</div>
+        <div>
+            <h2>GramediaBook</h2>
+            <span>Monitor</span>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/" class="nav-link">🏠 Dashboard</a>
+        <a href="{{ url_for('catalog') }}" class="nav-link">📖 Katalog Buku</a>
+        <a href="{{ url_for('price_analysis') }}" class="nav-link active">
+            📈 Analisis Harga
+        </a>
+        <a href="/#history" class="nav-link">📊 Riwayat Scraping</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <span>Made with 💗</span>
+        <small>GramediaBook Monitor</small>
+    </div>
+</div>
+
+<main class="main-content">
+
+    <!-- HEADER -->
+    <header class="topbar">
+        <div>
+            <h1>Analisis Harga 📈</h1>
+            <p>Pantau perubahan harga koleksi buku Gramedia.</p>
+        </div>
+
+        <div class="profile">
+            <span>🎀</span>
+            <div>
+                <strong>Book Monitor</strong>
+                <small>Administrator</small>
+            </div>
+        </div>
+    </header>
+
+    <!-- INTRO -->
+    <section class="analysis-banner">
+        <div>
+            <span class="analysis-eyebrow">YOUR PRICE INSIGHT ✨</span>
+            <h2>Kenali Perubahan Harga Buku! 💗</h2>
+            <p>
+                Temukan buku yang mengalami kenaikan, penurunan,
+                atau perubahan harga terbesar berdasarkan riwayat scraping.
+            </p>
+        </div>
+        <div class="analysis-banner-icon">📚💰</div>
+    </section>
+
+    <!-- STATISTICS -->
+    <section class="analysis-stats">
+
+        <div class="analysis-stat-card">
+            <div class="analysis-stat-icon">📚</div>
+            <span>Buku Dianalisis</span>
+            <strong>{{ total_analyzed }}</strong>
+            <small>Buku dengan minimal 2 catatan harga</small>
+        </div>
+
+        <div class="analysis-stat-card">
+            <div class="analysis-stat-icon">📈</div>
+            <span>Harga Meningkat</span>
+            <strong>{{ total_increased }}</strong>
+            <small>Buku mengalami kenaikan harga</small>
+        </div>
+
+        <div class="analysis-stat-card">
+            <div class="analysis-stat-icon">📉</div>
+            <span>Harga Menurun</span>
+            <strong>{{ total_decreased }}</strong>
+            <small>Buku mengalami penurunan harga</small>
+        </div>
+
+        <div class="analysis-stat-card">
+            <div class="analysis-stat-icon">➖</div>
+            <span>Harga Tetap</span>
+            <strong>{{ total_unchanged }}</strong>
+            <small>Tidak mengalami perubahan harga</small>
+        </div>
+
+    </section>
+
+    <!-- BIGGEST CHANGES -->
+    <section class="analysis-panel">
+
+        <div class="analysis-section-heading">
+            <div>
+                <h3>🏆 Perubahan Harga Terbesar</h3>
+                <p>Buku dengan selisih harga paling besar.</p>
+            </div>
+        </div>
+
+        {% if biggest_changes %}
+
+        <div class="analysis-table-wrapper">
+            <table class="analysis-table">
+                <thead>
+                    <tr>
+                        <th>Buku</th>
+                        <th>Harga Awal</th>
+                        <th>Harga Terbaru</th>
+                        <th>Selisih</th>
+                        <th>Perubahan</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for book in biggest_changes %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('book_detail', book_id=book['id']) }}"
+                               class="analysis-book-link">
+                                {{ book['title'] }}
+                            </a>
+                        </td>
+
+                        <td>
+                            Rp{{ "{:,.0f}".format(book['first_price']).replace(",", ".") }}
+                        </td>
+
+                        <td>
+                            Rp{{ "{:,.0f}".format(book['latest_price']).replace(",", ".") }}
+                        </td>
+
+                        <td class="{% if book['difference'] > 0 %}price-up{% else %}price-down{% endif %}">
+                            {% if book['difference'] > 0 %}+{% endif %}
+                            Rp{{ "{:,.0f}".format(book['difference']|abs).replace(",", ".") }}
+                        </td>
+
+                        <td class="{% if book['percentage'] > 0 %}price-up{% else %}price-down{% endif %}">
+                            {% if book['percentage'] > 0 %}+{% endif %}
+                            {{ "%.2f"|format(book['percentage']) }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="analysis-empty">
+            <span>📊</span>
+            <h3>Belum Ada Perubahan Harga</h3>
+            <p>
+                Data perubahan harga akan muncul setelah scraping berikutnya
+                menemukan perbedaan harga buku.
+            </p>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- INCREASED BOOKS -->
+    <section class="analysis-panel">
+
+        <div class="analysis-section-heading">
+            <div>
+                <h3>📈 Buku dengan Kenaikan Harga</h3>
+                <p>Daftar buku yang mengalami peningkatan harga.</p>
+            </div>
+        </div>
+
+        {% if increased_books %}
+
+        <div class="analysis-book-list">
+            {% for book in increased_books %}
+            <div class="analysis-book-item">
+
+                <div class="analysis-book-info">
+                    <strong>
+                        <a href="{{ url_for('book_detail', book_id=book['id']) }}">
+                            {{ book['title'] }}
+                        </a>
+                    </strong>
+                    <small>{{ book['author'] or 'Penulis tidak diketahui' }}</small>
+                </div>
+
+                <div class="analysis-book-price">
+                    <strong class="price-up">
+                        +Rp{{ "{:,.0f}".format(book['difference']).replace(",", ".") }}
+                    </strong>
+                    <small class="price-up">
+                        +{{ "%.2f"|format(book['percentage']) }}%
+                    </small>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+
+        <div class="analysis-empty compact">
+            <span>🌸</span>
+            <p>Belum ada buku yang mengalami kenaikan harga.</p>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- DECREASED BOOKS -->
+    <section class="analysis-panel">
+
+        <div class="analysis-section-heading">
+            <div>
+                <h3>📉 Buku dengan Penurunan Harga</h3>
+                <p>Daftar buku yang mengalami penurunan harga.</p>
+            </div>
+        </div>
+
+        {% if decreased_books %}
+
+        <div class="analysis-book-list">
+            {% for book in decreased_books %}
+            <div class="analysis-book-item">
+
+                <div class="analysis-book-info">
+                    <strong>
+                        <a href="{{ url_for('book_detail', book_id=book['id']) }}">
+                            {{ book['title'] }}
+                        </a>
+                    </strong>
+                    <small>{{ book['author'] or 'Penulis tidak diketahui' }}</small>
+                </div>
+
+                <div class="analysis-book-price">
+                    <strong class="price-down">
+                        -Rp{{ "{:,.0f}".format(book['difference']|abs).replace(",", ".") }}
+                    </strong>
+                    <small class="price-down">
+                        {{ "%.2f"|format(book['percentage']) }}%
+                    </small>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+
+        <div class="analysis-empty compact">
+            <span>🌷</span>
+            <p>Belum ada buku yang mengalami penurunan harga.</p>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+    <footer>
+        GramediaBook Monitor © 2026 · Made with 💗
+    </footer>
+
+</main>
+
+</body>
+</html>

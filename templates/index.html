@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GramediaBook Monitor</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">📚</div>
+        <div>
+            <h2>GramediaBook</h2>
+            <span>Monitor</span>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/" class="nav-link active">🏠 Dashboard</a>
+        <a href="{{ url_for('catalog') }}" class="nav-link"> 📖 Katalog Buku</a>
+        <a href="#history" class="nav-link">📊 Riwayat Scraping</a>
+        <a href="{{ url_for('price_analysis') }}" class="nav-link"> 📈 Analisis Harga</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <span>Made with 💗</span>
+        <small>GramediaBook Monitor</small>
+    </div>
+</div>
+
+<main class="main-content">
+
+    <header class="topbar">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Selamat datang! Yuk, pantau koleksi buku Gramedia.</p>
+        </div>
+
+        <div class="profile">
+            <span>🎀</span>
+            <div>
+                <strong>Book Monitor</strong>
+                <small>Administrator</small>
+            </div>
+        </div>
+    </header>
+
+    <section class="welcome-card">
+        <div>
+            <span class="welcome-label">YOUR BOOK TRACKER ✨</span>
+            <h2>Halo, Book Lover! 💗</h2>
+            <p>
+                Pantau koleksi, harga, dan perkembangan buku
+                favoritmu dalam satu tempat.
+            </p>
+        </div>
+        <div class="welcome-illustration">📚🌷</div>
+    </section>
+
+    <section class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon pink">📚</div>
+            <p>Total Buku</p>
+            <h2>{{ total_books }}</h2>
+            <span>Terdaftar di database</span>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon purple">💰</div>
+            <p>Perubahan Harga</p>
+            <h2>{{ total_price_changes }}</h2>
+            <span>Catatan perubahan harga</span>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon yellow">🆕</div>
+            <p>Buku Baru Terakhir</p>
+            <h2>
+                {{ latest_scrape['new_books'] if latest_scrape else 0 }}
+            </h2>
+            <span>Dari scraping terakhir</span>
+        </div>
+
+    </section>
+
+    <section class="content-grid">
+
+        <div class="panel book-panel">
+            <div class="panel-header">
+                <div>
+                    <h3>📖 Buku Terbaru</h3>
+                    <p>Data buku yang tersimpan di database</p>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Judul Buku</th>
+                            <th>Penulis</th>
+                            <th>Harga</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for book in latest_books %}
+                        <tr>
+                            <td class="book-title">{{ book['title'] }}</td>
+                            <td>{{ book['author'] }}</td>
+                            <td class="price">
+                                {% if book['price'] is not none %}
+                                    Rp{{ "{:,.0f}".format(book['price']).replace(",", ".") }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3">Belum ada data buku.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel history-panel" id="history">
+            <div class="panel-header">
+                <div>
+                    <h3>🕒 Aktivitas Scraping</h3>
+                    <p>Riwayat pengambilan data</p>
+                </div>
+            </div>
+
+            <div class="history-list">
+                {% for item in scrape_history %}
+                <div class="history-item">
+                    <div class="history-dot"></div>
+                    <div>
+                        <strong>Scraping selesai</strong>
+                        <p>{{ item['scraped_at'] }}</p>
+                        <small>
+                            {{ item['total_books'] }} buku ditemukan
+                            · {{ item['new_books'] }} buku baru
+                        </small>
+                    </div>
+                </div>
+                {% else %}
+                <p>Belum ada aktivitas scraping.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </section>
+
+    <footer>
+        GramediaBook Monitor © 2026 · Made with 💗
+    </footer>
+
+</main>
+
+</body>
+</html>
